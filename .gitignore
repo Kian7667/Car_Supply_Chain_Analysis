@@ -16,4 +16,7 @@ __pycache__/
 Thumbs.db
 
 # Original Data
-/data/IDA SoSe26 - Data
+/data
+
+# venv
+venv/
