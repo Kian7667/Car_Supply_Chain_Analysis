@@ -1,10 +1,19 @@
-# 0. Setup
+# OEM1 Supply Chain Analysis
+<p align="center">
+	<img src="./www/Case_Study_Logo.png" alt="Logo" width="180">
+</p>
+
+---
+
+
+
+## 0. Setup
 - All files run on the latest stable python version `3.14.7`
 - `requirements.txt` file is given under additional_files
 - `requirements.txt` can be used to install all dependencies needed by the app or the notebooks 
 
 ---
-# 1. Objective
+## 1. Objective
 
 The task is to reconstruct the supply chain of vehicles produced by OEM1 in 2015 and determine the total logistics distance travelled before the vehicles reach their customers in order to assess the manufacturer's sustainability. The analysis focuses on the engine and gearshift components as well as the corresponding parts installed in these components.
 
@@ -14,7 +23,7 @@ Furthermore, it is assumed that each distribution center is located in the state
 
 ---
 
-# 2. Case Study Notebook
+## 2. Case Study Notebook
 
 - The notebook assumes the **original Data** to be located under `data/IDA SoSe26 - Data/`
 
@@ -48,7 +57,7 @@ Furthermore, it is assumed that each distribution center is located in the state
 
 ---
 
-# 3. Case Study app 
+## 3. Case Study app 
 
 
 
@@ -56,7 +65,7 @@ Furthermore, it is assumed that each distribution center is located in the state
 
 
 
-
-# AI-gererated logo
+---
+## AI-gererated logo
 
 - The logo used in the streamlit app was generated using AI (ChatGPT) and is not a real company logo. It was created for demonstration purposes only and does not represent any actual brand or organization.
