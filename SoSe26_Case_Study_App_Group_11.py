@@ -374,7 +374,8 @@ with tab2:
     )
 
     if "selected_vehicle" not in st.session_state:
-        st.session_state.selected_vehicle = None
+        st.session_state.selected_vehicle = example_vehicles[0]
+
 
     def select_example_vehicle():
         st.session_state.selected_vehicle = (

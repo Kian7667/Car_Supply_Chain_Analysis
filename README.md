@@ -53,14 +53,19 @@ Furthermore, it is assumed that each distribution center is located in the state
 
 - The final dataset is briefly evaluated with visualisations
 - insights are clearly documented
-- the main presentation of the insights is done by the app
+- the main presentation of the results is done via the app
 
 ---
 
-## 3. Case Study app 
+## 3. Case Study App 
 
 - the application can be run by `streamlit run .\SoSe26_Case_Study_App_Group_11.py` with all requirements from `requirements.txt` installed.
 - the application only runs with the final dataset located under `data/SoSe26_Case_Study_finalData_Group_11.csv`
+- The App is split into 4 main sections:
+	- **Overview**: The objective of the analysis is explained and the user is guided through the app
+	- **Route Explorer (Map)**: The logistics routes are visualised and can be explored interactively
+	- **Distance Analysis (Boxplot)**: The main insights are presented in a clear and concise way
+	- **Data Exploration**: The final dataset can be explored interactively and downloaded for further analysis
 
 
 
