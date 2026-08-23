@@ -2,6 +2,158 @@ import streamlit as st
 import pandas as pd
 import plotly.express as px
 import plotly.graph_objects as go
+import warnings
+
+warnings.filterwarnings("ignore")
+
+
+st.set_page_config(
+    page_title="OEM1 Sustainability Analysis",
+    layout="wide"
+)
+
+
+
+@st.cache_data
+def load_data():
+    return pd.read_csv("data/SoSe26_Case_Study_finalData_Group_11.csv")
+
+@st.cache_data
+def convert_df_to_csv(data):
+    return data.to_csv(index=False).encode("utf-8")
+
+@st.cache_data
+def prepare_boxplot_data(data):
+
+    base = data[
+        [
+            "ID_Vehicle",
+            "Vehicle_Type",
+            "Type_Origin",
+            "Route_Stage",
+            "Distance_km",
+            "Total_Distance_km"
+        ]
+    ]
+
+    return {
+        "Vehicle Type": (
+            base[
+                [
+                    "ID_Vehicle",
+                    "Vehicle_Type",
+                    "Total_Distance_km"
+                ]
+            ]
+            .drop_duplicates()
+        ),
+
+        "Engine Type": (
+            base[
+                base["Type_Origin"].str.startswith(
+                    "Engine",
+                    na=False
+                )
+            ][
+                [
+                    "Type_Origin",
+                    "Total_Distance_km"
+                ]
+            ]
+            .drop_duplicates()
+        ),
+
+        "Gearshift Type": (
+            base[
+                base["Type_Origin"].str.startswith(
+                    "Gearshift",
+                    na=False
+                )
+            ][
+                [
+                    "Type_Origin",
+                    "Total_Distance_km"
+                ]
+            ]
+            .drop_duplicates()
+        ),
+
+        "Single Part Type": (
+            base[
+                base["Type_Origin"].str.startswith(
+                    "T",
+                    na=False
+                )
+            ][
+                [
+                    "Type_Origin",
+                    "Total_Distance_km"
+                ]
+            ]
+            .drop_duplicates()
+        ),
+
+        "Route Stage": (
+            base[
+                [
+                    "Route_Stage",
+                    "Distance_km"
+                ]
+            ]
+        )
+    }
+
+
+
+
+def create_boxplot(plot_df, category):
+
+    if category == "Route Stage":
+        x_column = "Route_Stage"
+        y_column = "Distance_km"
+        y_title = "Stage Distance (km)"
+
+    elif category == "Vehicle Type":
+        x_column = "Vehicle_Type"
+        y_column = "Total_Distance_km"
+        y_title = "Total Logistics Distance (km)"
+
+    else:
+        x_column = "Type_Origin"
+        y_column = "Total_Distance_km"
+        y_title = "Total Logistics Distance (km)"
+
+
+    fig = px.box(
+        plot_df,
+        x=x_column,
+        y=y_column,
+        points=False,
+        title=f"Distance Distribution by {category}"
+    )
+
+    fig.update_layout(
+        xaxis_title=category,
+        yaxis_title=y_title,
+        height=600
+    )
+
+    return fig
+
+
+def prepare_boxplot_figures(boxplot_data):
+
+    figures = {}
+
+    for category, data in boxplot_data.items():
+        figures[category] = create_boxplot(
+            data,
+            category
+        )
+
+    return figures
+
+
 
 
 def create_map(data):
@@ -25,7 +177,7 @@ def create_map(data):
                     width=2
                 ),
                 marker=dict(
-                    size=6
+                    size= [7, 12]
                 ),
                 name=f"{row["Type_Origin"]} to {row["Type_Destination"]}",
                 hoverinfo="text",
@@ -56,12 +208,9 @@ def create_map(data):
 
 
 
-
-
-st.set_page_config(
-    page_title="OEM1 Supply Chain Analysis",
-    layout="wide"
-)
+df = load_data()
+boxplot_data = prepare_boxplot_data(df)
+boxplot_figures = prepare_boxplot_figures(boxplot_data)
 
 
 
@@ -98,11 +247,7 @@ with col2:
 )
 
 
-@st.cache_data
-def load_data():
-    return pd.read_csv("SoSe26_Case_Study_finalData_Group_11.csv")
 
-df = load_data()
 
 
 tab1, tab2, tab3, tab4 = st.tabs(
@@ -182,13 +327,11 @@ with tab1:
 with tab2: 
     st.header("Interactive Supply Chain Map")
 
-    st.markdown(
-        """
-        Explore the logistics routes of individual vehicles produced in 2015.
+    st.caption(
+        "Explore the logistics routes of individual vehicles produced in 2015.\n\n" +
         
-        Use the search field to find a specific vehicle and visualize its complete
-        supply chain from component suppliers to the distribution center.
-        """
+        "Use the search field to find a specific vehicle and visualize its complete\
+        supply chain from component suppliers to the distribution center."
     )
     vehicle_search = st.text_input(
     "Search Vehicle ID"
@@ -210,6 +353,7 @@ with tab2:
         "Select Vehicle",
         vehicle_options
     )
+
     map_df = df[
         df["ID_Vehicle"] == selected_vehicle
     ]
@@ -218,35 +362,130 @@ with tab2:
 
     col1, col2, col3 = st.columns(3)
 
+    vehicle_total_distance = map_df["Total_Distance_km"].iloc[0]
+
+    average_vehicle_distance = (
+        df.groupby("ID_Vehicle")["Total_Distance_km"]
+        .first()
+        .mean()
+    )
+
     with col1:
         st.metric(
-            "Total Logistics Distance",
-            f"{map_df['Total_Distance_km'].iloc[0]:,.1f} km"
+            "Vehicle Total Distance",
+            f"{vehicle_total_distance:,.1f} km"
         )
 
     with col2:
         st.metric(
-            "Number of Route Stages",
-            len(map_df)
+            "Average Vehicle Distance",
+            f"{average_vehicle_distance:,.1f} km"
         )
 
     with col3:
+        difference = (
+            vehicle_total_distance - average_vehicle_distance
+        )
+
         st.metric(
-            "Average Route Distance",
-            f"{map_df['Distance_km'].mean():,.1f} km"
+            "Difference from Average",
+            f"{difference:+,.1f} km"
         )
         
     fig = create_map(map_df)
 
     st.plotly_chart(
         fig,
-        use_container_width=True
+        width = "stretch"
     )
- 
+    st.info(
+    """
+    **Map Interpretation**
+
+    - Small markers represent the **origin** of a logistics route.
+    - Large markers represent the **destination** of a logistics route.
+    - Lines indicate the transportation path between locations.
+    - Hover over a route to view detailed information about the logistics stage,
+      locations, and travelled distance.
+
+    The displayed routes represent the supply chain stages of the selected vehicle,
+    from component suppliers to the distribution center.
+    """
+)
+
+with tab3:
+
+    st.header("Interactive Logistics Distance Analysis")
+
+    st.caption(
+        "Compare logistics distances across different supply chain categories."
+    )
+
+    category = st.selectbox(
+    "Compare by",
+    list(boxplot_figures.keys())
+    )
+
+    fig = boxplot_figures[category]
+
+    st.plotly_chart(
+        fig,
+        width="stretch"
+    )
+
 with tab4:
 
-    st.write(
-        "Analysis of logistics routes for vehicles produced in 2015."
+    st.header("Dataset Overview")
+
+    st.caption(
+        "Explore the final dataset used for the supply chain analysis."
     )
 
-    st.dataframe(df)
+    col1, col2 = st.columns(2)
+
+    with col1:
+        st.metric(
+            "Total Rows",
+            f"{len(df):,}"
+        )
+
+    with col2:
+        st.metric(
+            "Total Columns",
+            len(df.columns)
+        )
+
+
+    selected_columns = st.multiselect(
+        "Select columns to display",
+        df.columns,
+        default=list(df.columns)
+    )
+
+
+    number_rows = st.slider(
+        "Number of rows to display",
+        min_value=10,
+        max_value=1000,
+        value=100,
+        step=10
+    )
+
+
+    display_df = df.loc[:, selected_columns].head(number_rows)
+
+    st.dataframe(
+        display_df,
+        width = "stretch",
+        height=400
+    )
+
+    csv = convert_df_to_csv(df)
+
+
+    st.download_button(
+        label="Download Complete Dataset",
+        data=csv,
+        file_name="OEM1_supply_chain_dataset.csv",
+        mime="text/csv"
+    )

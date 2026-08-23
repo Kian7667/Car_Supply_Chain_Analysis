@@ -59,9 +59,8 @@ Furthermore, it is assumed that each distribution center is located in the state
 
 ## 3. Case Study app 
 
-
-
--
+- the application can be run by `streamlit run .\SoSe26_Case_Study_App_Group_11.py` with all requirements from `requirements.txt` installed.
+- the application only runs with the final dataset located under `data/SoSe26_Case_Study_finalData_Group_11.csv`
 
 
 
