@@ -16,15 +16,24 @@ st.set_page_config(
 
 @st.cache_data
 def load_data():
+    """
+    Load the final dataset for the supply chain analysis.
+    """
+
     return pd.read_csv("data/SoSe26_Case_Study_finalData_Group_11.csv")
 
 @st.cache_data
 def convert_df_to_csv(data):
+    """
+    Convert the DataFrame to CSV format for download.
+    """
     return data.to_csv(index=False).encode("utf-8")
 
 @st.cache_data
 def prepare_boxplot_data(data):
-
+    """
+    Prepare the data for boxplot visualizations by extracting relevant columns
+    """
     base = data[
         [
             "ID_Vehicle",
@@ -103,11 +112,34 @@ def prepare_boxplot_data(data):
         )
     }
 
+@st.cache_data
+def get_vehicle_ids(data):
+    """
+    Get the unique vehicle IDs from the dataset.
+    """
+    return set(data["ID_Vehicle"].dropna().unique())
 
-
+@st.cache_data
+def get_example_vehicles(data, n=20):
+    """
+    Get a random sample of example vehicle IDs from the dataset.
+    """
+    return (
+        data["ID_Vehicle"]
+        .dropna()
+        .drop_duplicates()
+        .sample(
+            n=min(n, data["ID_Vehicle"].nunique()),
+            random_state=42
+        )
+        .sort_values()
+        .tolist()
+    )
 
 def create_boxplot(plot_df, category):
-
+    """
+    Create a boxplot figure based on the selected category.
+    """
     if category == "Route Stage":
         x_column = "Route_Stage"
         y_column = "Distance_km"
@@ -142,7 +174,9 @@ def create_boxplot(plot_df, category):
 
 
 def prepare_boxplot_figures(boxplot_data):
-
+    """
+    Prepare boxplot figures for each category based on the provided data.
+    """
     figures = {}
 
     for category, data in boxplot_data.items():
@@ -157,7 +191,9 @@ def prepare_boxplot_figures(boxplot_data):
 
 
 def create_map(data):
-
+    """
+    Create a scatter map figure to visualize the supply chain routes of a selected vehicle.
+    """
     fig = go.Figure()
 
     for _, row in data.iterrows():
@@ -211,9 +247,10 @@ def create_map(data):
 df = load_data()
 boxplot_data = prepare_boxplot_data(df)
 boxplot_figures = prepare_boxplot_figures(boxplot_data)
+vehicle_ids = get_vehicle_ids(df)
+example_vehicles = get_example_vehicles(df)
 
-
-
+# Streamlit Header and Layout
 col1, col2 = st.columns([1, 5])
 
 with col1:
@@ -247,13 +284,12 @@ with col2:
 )
 
 
-
-
-
+# Tabs for navigation 
 tab1, tab2, tab3, tab4 = st.tabs(
     ["Overview","Route Explorer", "Distance Analysis", "Dataset Overview"]
 )
 
+# General Overview Tab
 with tab1:
     st.markdown(
     """
@@ -324,6 +360,7 @@ with tab1:
     )
 
 
+# Route Explorer Tab
 with tab2: 
     st.header("Interactive Supply Chain Map")
 
@@ -331,34 +368,122 @@ with tab2:
         "Explore the logistics routes of individual vehicles produced in 2015.\n\n" +
         
         "Use the search field to find a specific vehicle and visualize its complete\
-        supply chain from component suppliers to the distribution center."
-    )
-    vehicle_search = st.text_input(
-    "Search Vehicle ID"
+        supply chain from component suppliers to the distribution center.\n\n" +
+
+        "Each Vehicle ID is of the format: **Vehicle Type - Manufacturer - Plant - Vehicle Number**\n\n" 
     )
 
-    if vehicle_search:
-        vehicle_options = df[
-            df["ID_Vehicle"].str.contains(
-                vehicle_search,
-                case=False,
-                na=False
+    if "selected_vehicle" not in st.session_state:
+        st.session_state.selected_vehicle = None
+
+    def select_example_vehicle():
+        st.session_state.selected_vehicle = (
+        st.session_state.example_vehicle
+    )
+
+
+    st.subheader("Select Vehicle")
+
+
+    # Show example vehicles in a dropdown for quick selection
+
+    st.selectbox(
+        "Example Vehicles",
+        example_vehicles,
+        key="example_vehicle",
+        on_change=select_example_vehicle
+)
+    # Show a form for manual vehicle selection
+    with st.form("vehicle_selection"):
+
+        col1, col2, col3, col4 = st.columns(4)
+
+        with col1:
+            vehicle_type = st.text_input(
+                "Vehicle Type",
+                placeholder="e.g. 11"
             )
-        ]["ID_Vehicle"].unique()
-    else:
-        vehicle_options = df["ID_Vehicle"].unique()
+
+        with col2:
+            manufacturer = st.text_input(
+                "Manufacturer",
+                placeholder="e.g. 1"
+            )
+
+        with col3:
+            plant = st.text_input(
+                "Plant",
+                placeholder="e.g. 11"
+            )
+
+        with col4:
+            serial_id = st.text_input(
+                "Vehicle Number",
+                placeholder="e.g. 905601"
+            )
+
+        submitted = st.form_submit_button("Show Vehicle")
 
 
-    selected_vehicle = st.selectbox(
-        "Select Vehicle",
-        vehicle_options
-    )
+    if submitted:
+
+        vehicle_type = vehicle_type.strip()
+        manufacturer = manufacturer.strip()
+        plant = plant.strip()
+        serial_id = serial_id.strip()
+
+        # Check whether all fields are filled
+        if not all([
+            vehicle_type,
+            manufacturer,
+            plant,
+            serial_id
+        ]):
+            st.warning(
+                "Please fill in all fields before selecting a vehicle."
+            )
+
+        #reconstruct the vehicle ID from the input fields
+        else:
+            entered_vehicle = (
+                f"{vehicle_type}-"
+                f"{manufacturer}-"
+                f"{plant}-"
+                f"{serial_id}"
+            )
+
+            # Check whether vehicle actually exists
+            if entered_vehicle not in vehicle_ids:
+                st.warning(
+                    f"Vehicle '{entered_vehicle}' was not found."
+                )
+
+            else:
+                st.session_state.selected_vehicle = entered_vehicle
+
+
+    selected_vehicle = st.session_state.selected_vehicle
+
+    if selected_vehicle is not None:
+
+        map_df = df[
+            df["ID_Vehicle"] == selected_vehicle
+        ]
+
+        st.success(
+            f"Selected Vehicle: {selected_vehicle}"
+        )
+
+        st.subheader(
+            f"Supply Chain Map - Vehicle {selected_vehicle}"
+        )
+
 
     map_df = df[
         df["ID_Vehicle"] == selected_vehicle
     ]
-    
-    st.subheader(f"Supply Chain Map - Vehicle {selected_vehicle}")
+
+    # core metrics for the selected vehicle
 
     col1, col2, col3 = st.columns(3)
 
@@ -413,6 +538,8 @@ with tab2:
     """
 )
 
+# Distance Analysis Tab (Boxplot Visualizations)
+
 with tab3:
 
     st.header("Interactive Logistics Distance Analysis")
@@ -433,12 +560,29 @@ with tab3:
         width="stretch"
     )
 
+    st.info(
+    """
+    **Boxplot Interpretation**
+
+    - The box represents the interquartile range (IQR), spanning from the first quartile (Q1) to the third quartile (Q3).
+    - The line inside the box represents the median.
+    - The whiskers extend to the most extreme observations within **1.5 × IQR** below Q1 and above Q3.
+    - Values outside these limits are considered outliers.
+
+    For **Vehicle Type, Engine Type, Gearshift Type, and Single Part Type**, the boxplots compare the **total logistics distance per vehicle**.
+
+    For **Route Stage**, the boxplots instead compare the **individual distances of the respective route stages**, since a route stage represents only one part of the complete supply chain.
+    """
+)
+
+# Paginated Dataset Overview Tab
+
 with tab4:
 
     st.header("Dataset Overview")
 
     st.caption(
-        "Explore the final dataset used for the supply chain analysis."
+        "Explore the complete final dataset used for the supply chain analysis."
     )
 
     col1, col2 = st.columns(2)
@@ -463,29 +607,74 @@ with tab4:
     )
 
 
-    number_rows = st.slider(
-        "Number of rows to display",
-        min_value=10,
-        max_value=1000,
-        value=100,
-        step=10
+    rows_per_page = st.selectbox(
+        "Rows per page",
+        [50, 100, 250, 500, 1000],
+        index=1
     )
 
 
-    display_df = df.loc[:, selected_columns].head(number_rows)
-
-    st.dataframe(
-        display_df,
-        width = "stretch",
-        height=400
+    total_pages = max(
+        1,
+        (len(df) + rows_per_page - 1) // rows_per_page
     )
+
+
+    page = st.number_input(
+        "Page",
+        min_value=1,
+        max_value=total_pages,
+        value=1,
+        step=1
+    )
+
+
+    start_row = (page - 1) * rows_per_page
+    end_row = min(
+        start_row + rows_per_page,
+        len(df)
+    )
+
+
+    st.caption(
+        f"Showing rows {start_row + 1:,}–{end_row:,} "
+        f"of {len(df):,} | Page {page:,} of {total_pages:,}"
+    )
+
+
+    if selected_columns:
+
+        display_df = df.iloc[
+            start_row:end_row
+        ][selected_columns]
+
+        st.dataframe(
+            display_df,
+            width="stretch",
+            height=500
+        )
+
+    else:
+        st.warning(
+            "Please select at least one column to display."
+        )
+
 
     csv = convert_df_to_csv(df)
-
 
     st.download_button(
         label="Download Complete Dataset",
         data=csv,
         file_name="OEM1_supply_chain_dataset.csv",
         mime="text/csv"
+    )
+
+
+    st.info(
+        "The dataset contains information about the reconstructed supply chain stages "
+        "of all analyzed vehicles produced in 2015.\n\n"
+        "Each row represents a unique logistics route, including information about "
+        "the origin and destination locations, route distance, and vehicle type.\n\n"
+        "The long-format structure enables detailed exploration of logistics distances "
+        "and supply chain patterns across different vehicles, components, and route stages."
     )
