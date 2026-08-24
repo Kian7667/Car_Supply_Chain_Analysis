@@ -59,17 +59,18 @@ Furthermore, it is assumed that each distribution center is located in the state
 
 ## 3. Case Study App 
 
-- the application can be run by `streamlit run .\SoSe26_Case_Study_App_Group_11.py` with all requirements from `requirements.txt` installed.
+- the application can be run by `streamlit run .\SoSe26_Case_Study_App_Group_11.py` with all requirements from `requirements.txt` installed. Or if on Linux and you are in the directory you can run: `streamlit run SoSe26_Case_Study_App_Group_11.py`
 - the application only runs with the final dataset located under `data/SoSe26_Case_Study_finalData_Group_11.csv`
 - The App is split into 4 main sections:
 	- **Overview**: The objective of the analysis is explained and the user is guided through the app
 	- **Route Explorer (Map)**: The logistics routes are visualised and can be explored interactively
 	- **Distance Analysis (Boxplot)**: The main insights are presented in a clear and concise way
 	- **Data Exploration**: The final dataset can be explored interactively and downloaded for further analysis
+- Frequently used resources are cached in order to reduce RAM usage 
 
 
 
 ---
-## AI-gererated logo
+## Application Logo
 
-- The logo used in the streamlit app was generated using AI (ChatGPT) and is not a real company logo. It was created for demonstration purposes only and does not represent any actual brand or organization.
+- The logo used in the streamlit app is taken from the QW-Fachgebiet under https://www.tu.berlin/qw.

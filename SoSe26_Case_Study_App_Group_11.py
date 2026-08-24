@@ -4,8 +4,8 @@ import plotly.express as px
 import plotly.graph_objects as go
 import warnings
 
-warnings.filterwarnings("ignore")
 
+warnings.filterwarnings("ignore")
 
 st.set_page_config(
     page_title="OEM1 Sustainability Analysis",
@@ -14,22 +14,38 @@ st.set_page_config(
 
 
 
-@st.cache_data
+@st.cache_resource
 def load_data():
     """
     Load the final dataset for the supply chain analysis.
     """
+    dtypes = {
+        "Vehicle_Type": "category",
+        "Type_Origin": "category",
+        "Type_Destination": "category",
+        "Route_Stage": "category",
+        "City_Origin": "category",
+        "City_Destination": "category",
+        "Location_Origin": "category",
+        "Location_Destination": "category",
+        "Distance_km": "float32",
+        "Total_Distance_km": "float32",
+        "Lat_Origin": "float32",
+        "Lon_Origin": "float32",
+        "Lat_Destination": "float32",
+        "Lon_Destination": "float32",
+    }
 
-    return pd.read_csv("data/SoSe26_Case_Study_finalData_Group_11.csv")
+    return pd.read_csv("data/SoSe26_Case_Study_finalData_Group_11.csv", dtype = dtypes)
 
-@st.cache_data
+@st.cache_resource
 def convert_df_to_csv(data):
     """
     Convert the DataFrame to CSV format for download.
     """
     return data.to_csv(index=False).encode("utf-8")
 
-@st.cache_data
+@st.cache_resource
 def prepare_boxplot_data(data):
     """
     Prepare the data for boxplot visualizations by extracting relevant columns
@@ -112,14 +128,14 @@ def prepare_boxplot_data(data):
         )
     }
 
-@st.cache_data
+@st.cache_resource
 def get_vehicle_ids(data):
     """
     Get the unique vehicle IDs from the dataset.
     """
     return set(data["ID_Vehicle"].dropna().unique())
 
-@st.cache_data
+@st.cache_resource
 def get_example_vehicles(data, n=20):
     """
     Get a random sample of example vehicle IDs from the dataset.
@@ -172,7 +188,7 @@ def create_boxplot(plot_df, category):
 
     return fig
 
-
+@st.cache_resource
 def prepare_boxplot_figures(boxplot_data):
     """
     Prepare boxplot figures for each category based on the provided data.
@@ -243,6 +259,14 @@ def create_map(data):
     return fig
 
 
+@st.cache_resource
+def get_average_vehicle_distance(data): 
+    """
+    Return the average total logistics distance across all vehicles
+    """
+    return data.groupby("ID_Vehicle")["Total_Distance_km"].first().mean()
+
+
 
 df = load_data()
 boxplot_data = prepare_boxplot_data(df)
@@ -283,13 +307,12 @@ with col2:
     unsafe_allow_html=True
 )
 
-
-# Tabs for navigation 
+#tabs
 tab1, tab2, tab3, tab4 = st.tabs(
     ["Overview","Route Explorer", "Distance Analysis", "Dataset Overview"]
 )
 
-# General Overview Tab
+# gen overview
 with tab1:
     st.markdown(
     """
@@ -303,7 +326,7 @@ with tab1:
 
     <p style="font-size:18px;">
     This application visualizes the logistics routes of vehicles produced by OEM1 in 2015.
-    The objective is to analyze transportation distances across the supply chain and
+    The objective is to analyze transportation distances acros the supply chain and
     explore the logistics structure of vehicles, components, and individual parts.
     </p>
 
@@ -317,7 +340,7 @@ with tab1:
 
     <p style="font-size:16px;">
     An analysis of the final customer delivery stage is excluded, as the customer location cannot be reliably determined and is outside the manufacturer's control. 
-    Therefore, this stage is not considered relevant for assessing the sustainability of the controllable supply chain.
+    Therefore, this stage is not considered relevant for asessing the sustainability of the controllable supply chain.
     </p>
 
     </div>
@@ -360,7 +383,7 @@ with tab1:
     )
 
 
-# Route Explorer Tab
+# route Explorer Tab
 with tab2: 
     st.header("Interactive Supply Chain Map")
 
@@ -386,7 +409,7 @@ with tab2:
     st.subheader("Select Vehicle")
 
 
-    # Show example vehicles in a dropdown for quick selection
+    # show example vehicles in a drop down for quick selection
 
     st.selectbox(
         "Example Vehicles",
@@ -394,7 +417,7 @@ with tab2:
         key="example_vehicle",
         on_change=select_example_vehicle
 )
-    # Show a form for manual vehicle selection
+    # show a form for manual vehicle selection
     with st.form("vehicle_selection"):
 
         col1, col2, col3, col4 = st.columns(4)
@@ -433,7 +456,7 @@ with tab2:
         plant = plant.strip()
         serial_id = serial_id.strip()
 
-        # Check whether all fields are filled
+        # check whether al fields are filled
         if not all([
             vehicle_type,
             manufacturer,
@@ -490,11 +513,7 @@ with tab2:
 
     vehicle_total_distance = map_df["Total_Distance_km"].iloc[0]
 
-    average_vehicle_distance = (
-        df.groupby("ID_Vehicle")["Total_Distance_km"]
-        .first()
-        .mean()
-    )
+    average_vehicle_distance = get_average_vehicle_distance(df)
 
     with col1:
         st.metric(
@@ -576,7 +595,7 @@ with tab3:
     """
 )
 
-# Paginated Dataset Overview Tab
+# paged dataset overview
 
 with tab4:
 
