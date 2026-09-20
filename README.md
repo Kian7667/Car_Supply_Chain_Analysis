@@ -3,9 +3,42 @@
 	<img src="./www/Case_Study_Logo.png" alt="Logo" width="180">
 </p>
 
+## Project Showcase
+
+<p align="center">
+  <img src="./additional_files/app_objective_overview.png" alt="Objective overview dashboard" width="960">
+</p>
+
+<p align="center">
+  <strong>Supply chain transparency, route reconstruction, and sustainability insights from OEM1 production data.</strong>
+</p>
+
+<div align="center">
+  <table>
+    <tr>
+      <td align="center">
+        <img src="./additional_files/app_dataset_overview.png" alt="Dataset overview" width="430"><br>
+        <b>Dataset overview</b>
+      </td>
+      <td align="center">
+        <img src="./additional_files/app_map1.png" alt="Route explorer map view" width="430"><br>
+        <b>Route Explorer</b>
+      </td>
+    </tr>
+    <tr>
+      <td align="center">
+        <img src="./additional_files/app_map2.png" alt="Detailed map route analysis" width="430"><br>
+        <b>Logistics network analysis</b>
+      </td>
+      <td align="center">
+        <img src="./additional_files/app_boxplot.png" alt="Distance analysis boxplot" width="430"><br>
+        <b>Distance analysis</b>
+      </td>
+    </tr>
+  </table>
+</div>
+
 ---
-
-
 
 ## 0. Setup
 - All files run on the latest stable python version `3.14.7`
